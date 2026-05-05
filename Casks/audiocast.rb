@@ -1,11 +1,11 @@
 cask "audiocast" do
-  version "1.1.14"
-  sha256 "34a535c29273fcfd7e072c0c28cf9299523af645e1ff1386c140fc05214098a0"
+  version "1.1.15"
+  sha256 "6ce53f75f719e986fa3ff0cbf5e112637eca1ccf471a5d4fc91093b7dded5dd4"
 
-  url "https://github.com/jobtools/homebrew-audiocast/releases/download/mac-v#{version}/AudioCast-mac-v#{version}.zip"
+  url "https://github.com/jobtools/homebrew-tap/releases/download/mac-v#{version}/AudioCast-mac-v#{version}.zip"
   name "AudioCast"
   desc "Stream macOS system audio to an Android phone over Wi-Fi"
-  homepage "https://github.com/jobtools/homebrew-audiocast"
+  homepage "https://github.com/jobtools/homebrew-tap"
 
   depends_on macos: ">= :sonoma"
   depends_on formula: "opus"
