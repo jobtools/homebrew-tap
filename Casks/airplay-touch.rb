@@ -1,6 +1,6 @@
 cask "airplay-touch" do
-  version "1.1.17"
-  sha256 "1a1f6848d9336ed5247f68961d856a13319a2994d0e850d5c490c917c0cbc25a"
+  version "1.1.18"
+  sha256 "603ce1d79572719539a6c3a9a2a985a7e710b38f5d67bcb129c9802b2312c310"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/mac-v#{version}/AirPlay-Touch-mac-v#{version}.zip"
   name "AirPlay Touch"
