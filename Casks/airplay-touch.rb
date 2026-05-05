@@ -1,11 +1,11 @@
 cask "airplay-touch" do
-  version "1.1.14"
-  sha256 "5ae8d1d2d64111a7bbc72939a88a99387ea655866d424dbc547bb80233524a8c"
+  version "1.1.15"
+  sha256 "0e41d10d75d0b30fbbd1a7308a143371610e7af8dd81836a2c38e63a5009bd6d"
 
-  url "https://github.com/jobtools/airplay-android/releases/download/mac-v#{version}/AirPlay-Touch-mac-v#{version}.zip"
+  url "https://github.com/jobtools/homebrew-tap/releases/download/mac-v#{version}/AirPlay-Touch-mac-v#{version}.zip"
   name "AirPlay Touch"
   desc "AirPlay receiver companion that pairs with the Android app"
-  homepage "https://github.com/jobtools/airplay-android"
+  homepage "https://github.com/jobtools/homebrew-tap"
 
   depends_on macos: ">= :sonoma"
 
