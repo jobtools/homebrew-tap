@@ -9,7 +9,6 @@ cask "audiocast" do
 
   depends_on macos: ">= :sonoma"
   depends_on formula: "opus"
-  depends_on cask: "audiocast-driver"
 
   app "AudioCast.app"
 
@@ -34,9 +33,12 @@ cask "audiocast" do
     to open the app, allow it via System Settings → Privacy & Security →
     "Open Anyway" once.
 
-    AudioCast streams audio through the AudioCast Driver (a virtual audio
-    device installed automatically as a cask dependency). After install,
-    open the menu bar icon and click "Connect" once a phone shows up.
+    AudioCast streams audio through the AudioCast Driver, a virtual audio
+    device. The app prompts you to install it on first run if it's not
+    present, so most users don't need to do anything separately.
+
+    After install, open the menu bar icon and click "Connect" once a phone
+    shows up.
   CAVEATS
 
   zap trash: [
