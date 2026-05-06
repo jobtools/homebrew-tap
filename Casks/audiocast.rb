@@ -1,6 +1,6 @@
 cask "audiocast" do
-  version "1.1.16"
-  sha256 "be40bbbcf7dfe95e0bae4d85970dc38ab85060ad82efb646b3716a4956432008"
+  version "1.1.18"
+  sha256 "e7efe5fae774fcdcf490683a7887406c268d01cc8364e4f8a2f533c39d777114"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/mac-v#{version}/AudioCast-mac-v#{version}.zip"
   name "AudioCast"
@@ -9,6 +9,7 @@ cask "audiocast" do
 
   depends_on macos: ">= :sonoma"
   depends_on formula: "opus"
+  depends_on cask: "audiocast-driver"
 
   app "AudioCast.app"
 
@@ -33,12 +34,9 @@ cask "audiocast" do
     to open the app, allow it via System Settings → Privacy & Security →
     "Open Anyway" once.
 
-    AudioCast streams audio through the AudioCast Driver, a virtual audio
-    device. The app prompts you to install it on first run if it's not
-    present, so most users don't need to do anything separately.
-
-    After install, open the menu bar icon and click "Connect" once a phone
-    shows up.
+    AudioCast streams audio through the AudioCast Driver (a virtual audio
+    device installed automatically as a cask dependency). After install,
+    open the menu bar icon and click "Connect" once a phone shows up.
   CAVEATS
 
   zap trash: [
