@@ -1,6 +1,6 @@
 cask "audiocast" do
-  version "1.1.21"
-  sha256 "c17b142174c33e01e4b1a6d62299941f71c56b5526072e97f7a0dd69f206b5e8"
+  version "1.1.22"
+  sha256 "31b34e05424cb146f2f4e30d18d0066805463836f03b2cb66078f993df4815be"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.zip"
   name "AudioCast"
@@ -34,8 +34,9 @@ cask "audiocast" do
     "Open Anyway" once.
 
     AudioCast streams audio through the AudioCast Driver (a virtual audio
-    device installed via the standard macOS admin prompt on first connect). After install,
-    open the menu bar icon and click "Connect" once a phone shows up.
+    device). On first connect the app downloads and installs the driver
+    via the standard macOS admin prompt. After install, open the menu bar
+    icon and click "Connect" once a phone shows up.
   CAVEATS
 
   zap trash: [
