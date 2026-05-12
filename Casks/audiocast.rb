@@ -1,6 +1,6 @@
 cask "audiocast" do
   version "1.1.22"
-  sha256 "31b34e05424cb146f2f4e30d18d0066805463836f03b2cb66078f993df4815be"
+  sha256 "176c622a05e18b6a8198bfb7cb27b3ddbe4ef9d6933fd540429d640305473e64"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.zip"
   name "AudioCast"
@@ -8,7 +8,6 @@ cask "audiocast" do
   homepage "https://github.com/jobtools/homebrew-tap"
 
   depends_on macos: ">= :sonoma"
-  depends_on formula: "opus"
 
   app "AudioCast.app"
 
