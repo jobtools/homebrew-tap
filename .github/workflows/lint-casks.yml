@@ -26,14 +26,14 @@ jobs:
     env:
       HOMEBREW_NO_AUTO_UPDATE: "1"
       HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
-      HOMEBREW_DEVELOPER: "1"
     steps:
       - uses: actions/checkout@v4
 
-      # No `brew update`: the macos-latest runner already ships a recent
-      # Homebrew (it catches current deprecations like the depends_on macos:
-      # string form), and `brew update` was the sole source of
-      # HOMEBREW_USE_INTERNAL_API deprecation-annotation noise.
+      - name: Update Homebrew (so deprecations reflect current brew)
+        # Runs WITHOUT HOMEBREW_DEVELOPER, so the runner-set, now-deprecated
+        # HOMEBREW_USE_INTERNAL_API stays a plain warning here rather than a red
+        # ::error:: annotation. Keeps the gate pinned to current brew.
+        run: brew update --quiet || true
 
       - name: Register checkout as the jobtools/tap tap
         run: |
@@ -43,8 +43,13 @@ jobs:
           ln -s "$GITHUB_WORKSPACE" "$TAP"
 
       - name: Lint casks
+        # HOMEBREW_DEVELOPER is scoped to THIS step only — it makes cask-load
+        # deprecations fatal (the whole point of the gate). Off elsewhere so
+        # brew update doesn't emit its own deprecation annotation.
+        env:
+          HOMEBREW_DEVELOPER: "1"
         run: |
-          unset HOMEBREW_USE_INTERNAL_API   # runner-set + deprecated → silence annotation noise
+          unset HOMEBREW_USE_INTERNAL_API   # runner-set + deprecated → silence even the warning here
           fail=0
           for f in Casks/*.rb; do
             token="jobtools/tap/$(basename "$f" .rb)"
