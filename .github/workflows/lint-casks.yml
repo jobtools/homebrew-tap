@@ -1,0 +1,60 @@
+name: Lint casks
+
+# Loads every cask under HOMEBREW_DEVELOPER, which turns Homebrew deprecations
+# (e.g. the `depends_on macos:` string-comparison form) into hard errors. This
+# catches deprecated/broken cask syntax BEFORE it reaches users, instead of
+# leaking out as a warning on `brew upgrade` (or, once Homebrew disables the
+# deprecation, a hard load failure for everyone).
+#
+# Trust gate is bypassed with HOMEBREW_NO_REQUIRE_TAP_TRUST so the run fails on
+# the deprecation itself, not on an untrusted-tap setup error.
+
+on:
+  push:
+    branches: [main]
+    paths: ['Casks/*.rb']
+  pull_request:
+    paths: ['Casks/*.rb']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: macos-latest
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+      HOMEBREW_NO_REQUIRE_TAP_TRUST: "1"
+      HOMEBREW_DEVELOPER: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update Homebrew (so deprecations reflect current brew)
+        run: brew update --quiet || true
+
+      - name: Register checkout as the jobtools/tap tap
+        run: |
+          TAP="$(brew --repository)/Library/Taps/jobtools/homebrew-tap"
+          mkdir -p "$(dirname "$TAP")"
+          rm -rf "$TAP"
+          ln -s "$GITHUB_WORKSPACE" "$TAP"
+
+      - name: Lint casks
+        run: |
+          fail=0
+          for f in Casks/*.rb; do
+            token="jobtools/tap/$(basename "$f" .rb)"
+            echo "::group::$token"
+            if brew info --cask "$token"; then
+              echo "OK: $token"
+            else
+              echo "::error file=$f::$token failed to load (deprecation or syntax error)"
+              fail=1
+            fi
+            echo "::endgroup::"
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "One or more casks failed to load. See annotations above."
+            exit 1
+          fi
