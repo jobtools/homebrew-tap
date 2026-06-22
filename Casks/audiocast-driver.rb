@@ -7,7 +7,7 @@ cask "audiocast-driver" do
   desc "Virtual audio device for AudioCast (BlackHole fork with AudioCast branding)"
   homepage "https://github.com/jobtools/audiocast-driver"
 
-  depends_on macos: ">= :sonoma"
+  depends_on macos: :sonoma
 
   pkg "AudioCast-#{version}.pkg"
 
