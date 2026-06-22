@@ -30,13 +30,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Update Homebrew (so deprecations reflect current brew)
-        run: |
-          # The runner sets HOMEBREW_USE_INTERNAL_API, which Homebrew now
-          # deprecates; under HOMEBREW_DEVELOPER it spams annotations. Unset it
-          # (empty still counts as "set") so only real cask issues surface.
-          unset HOMEBREW_USE_INTERNAL_API
-          brew update --quiet || true
+      # No `brew update`: the macos-latest runner already ships a recent
+      # Homebrew (it catches current deprecations like the depends_on macos:
+      # string form), and `brew update` was the sole source of
+      # HOMEBREW_USE_INTERNAL_API deprecation-annotation noise.
 
       - name: Register checkout as the jobtools/tap tap
         run: |
