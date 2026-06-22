@@ -31,7 +31,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Update Homebrew (so deprecations reflect current brew)
-        run: brew update --quiet || true
+        run: |
+          # The runner sets HOMEBREW_USE_INTERNAL_API, which Homebrew now
+          # deprecates; under HOMEBREW_DEVELOPER it spams annotations. Unset it
+          # (empty still counts as "set") so only real cask issues surface.
+          unset HOMEBREW_USE_INTERNAL_API
+          brew update --quiet || true
 
       - name: Register checkout as the jobtools/tap tap
         run: |
@@ -42,6 +47,7 @@ jobs:
 
       - name: Lint casks
         run: |
+          unset HOMEBREW_USE_INTERNAL_API   # runner-set + deprecated → silence annotation noise
           fail=0
           for f in Casks/*.rb; do
             token="jobtools/tap/$(basename "$f" .rb)"
