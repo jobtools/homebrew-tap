@@ -1,0 +1,192 @@
+#!/usr/bin/env bash
+#
+# android-run — build, install and launch an Android (Gradle) project's debug
+# APK on a connected device/emulator. General-purpose: run it from anywhere
+# inside a Gradle project and it walks up to find `gradlew`, resolves the
+# application id + launcher activity straight from the built APK, and starts it.
+#
+# Usage:
+#   android-run [options]
+#
+# Options:
+#   -m, --module <name>   Gradle module to build/run (default: auto-detect, else "app")
+#   -s, --serial <serial> Target a specific adb device/emulator
+#       --release         Build & install the release variant (default: debug)
+#       --no-launch       Build + install only, do not start the app
+#   -y, --yes             Assume "yes" to prompts (e.g. auto-uninstall on conflict)
+#   -h, --help            Show this help
+#
+# If the device already has an incompatible build installed (signature or
+# version mismatch), you are asked whether to uninstall and reinstall.
+# Pass -y to do that automatically without prompting.
+#
+# Environment:
+#   ANDROID_HOME / ANDROID_SDK_ROOT — Android SDK location
+#                                     (falls back to ~/Library/Android/sdk)
+#   ANDROID_SERIAL                  — default device serial (same as -s)
+
+set -euo pipefail
+
+prog=$(basename "$0")
+
+die() { printf '\033[31m%s: %s\033[0m\n' "$prog" "$*" >&2; exit 1; }
+info() { printf '\033[36m▸ %s\033[0m\n' "$*" >&2; }
+ok()   { printf '\033[32m✓ %s\033[0m\n' "$*" >&2; }
+
+usage() { sed -n '2,/^$/p' "$0" | sed 's/^# \{0,1\}//'; exit 0; }
+
+# ---- parse args ------------------------------------------------------------
+module=""
+serial="${ANDROID_SERIAL:-}"
+variant="debug"
+launch=1
+assume_yes=0
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -m|--module)  module="${2:-}"; shift 2 ;;
+    -s|--serial)  serial="${2:-}"; shift 2 ;;
+    --release)    variant="release"; shift ;;
+    --no-launch)  launch=0; shift ;;
+    -y|--yes)     assume_yes=1; shift ;;
+    -h|--help)    usage ;;
+    *) die "unknown option: $1 (try --help)" ;;
+  esac
+done
+
+confirm() {
+  # yes/no prompt on stderr; auto-yes with -y, auto-no when not a tty
+  [ "$assume_yes" -eq 1 ] && return 0
+  [ -t 0 ] || return 1
+  local ans
+  printf '\033[33m? %s [y/N] \033[0m' "$1" >&2
+  read -r ans || return 1
+  case "$ans" in [yY]|[yY][eE][sS]) return 0 ;; *) return 1 ;; esac
+}
+
+# ---- locate Android SDK ----------------------------------------------------
+sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/Library/Android/sdk}}"
+[ -d "$sdk" ] || die "Android SDK not found (set ANDROID_HOME). Looked in: $sdk"
+
+adb="$(command -v adb || true)"
+[ -n "$adb" ] || adb="$sdk/platform-tools/adb"
+[ -x "$adb" ] || die "adb not found (checked PATH and $sdk/platform-tools)"
+
+# newest build-tools aapt2
+aapt2="$(command -v aapt2 || true)"
+if [ -z "$aapt2" ]; then
+  aapt2="$(ls -d "$sdk"/build-tools/*/aapt2 2>/dev/null | sort -V | tail -1 || true)"
+fi
+[ -n "$aapt2" ] && [ -x "$aapt2" ] || die "aapt2 not found (install Android build-tools)"
+
+# ---- find gradle project root ----------------------------------------------
+root="$PWD"
+while [ "$root" != "/" ] && [ ! -x "$root/gradlew" ]; do
+  root=$(dirname "$root")
+done
+[ -x "$root/gradlew" ] || die "no gradlew found walking up from $PWD — not an Android project?"
+
+# ---- resolve module --------------------------------------------------------
+if [ -z "$module" ]; then
+  if [ -f "$root/app/build.gradle" ] || [ -f "$root/app/build.gradle.kts" ]; then
+    module="app"
+  else
+    # first module dir containing a build.gradle(.kts) that applies an android plugin
+    for d in "$root"/*/; do
+      b="$d/build.gradle"; [ -f "$b" ] || b="$d/build.gradle.kts"
+      if [ -f "$b" ] && grep -qE 'com\.android\.application' "$b"; then
+        module=$(basename "$d"); break
+      fi
+    done
+  fi
+  [ -n "$module" ] || die "could not auto-detect an application module; pass -m <module>"
+fi
+
+variant_cap="$(printf '%s' "${variant:0:1}" | tr '[:lower:]' '[:upper:]')${variant:1}"
+
+info "project : $root"
+info "module  : $module"
+info "variant : $variant"
+
+# ---- build -----------------------------------------------------------------
+info "building :$module:assemble$variant_cap ..."
+( cd "$root" && ./gradlew ":$module:assemble$variant_cap" )
+
+# ---- locate the APK --------------------------------------------------------
+apk_dir="$root/$module/build/outputs/apk/$variant"
+apk="$(ls -t "$apk_dir"/*.apk 2>/dev/null | grep -v -- '-unsigned' | head -1 || true)"
+[ -n "$apk" ] || die "no APK found in $apk_dir"
+info "apk     : ${apk#$root/}"
+
+# ---- read package + launcher activity from the APK -------------------------
+badging="$("$aapt2" dump badging "$apk")"
+pkg="$(printf '%s\n' "$badging" | sed -n "s/^package: name='\([^']*\)'.*/\1/p" | head -1)"
+activity="$(printf '%s\n' "$badging" | sed -n "s/^launchable-activity: name='\([^']*\)'.*/\1/p" | head -1)"
+[ -n "$pkg" ] || die "could not read package name from APK"
+
+# ---- pick a device ---------------------------------------------------------
+# bash 3.2 (stock macOS) has no mapfile — collect into an array the portable way
+devices=()
+while IFS= read -r line; do
+  [ -n "$line" ] && devices+=("$line")
+done < <("$adb" devices | awk 'NR>1 && $2=="device" {print $1}')
+
+if [ -n "$serial" ]; then
+  printf '%s\n' "${devices[@]}" | grep -qx "$serial" || die "device '$serial' not connected"
+elif [ "${#devices[@]}" -eq 0 ]; then
+  die "no device/emulator connected — start one, then re-run (adb devices)"
+elif [ "${#devices[@]}" -gt 1 ]; then
+  die "multiple devices connected; choose one with -s <serial>:
+$(printf '  %s\n' "${devices[@]}")"
+else
+  serial="${devices[0]}"
+fi
+adb() { "$adb" -s "$serial" "$@"; }
+info "device  : $serial"
+
+# ---- install ---------------------------------------------------------------
+do_install() {
+  # try with runtime-permission grant first, fall back without -g
+  adb install -r -g "$apk" 2>&1 || adb install -r "$apk" 2>&1
+}
+
+info "installing $pkg ..."
+if out="$(do_install)" && ! printf '%s' "$out" | grep -q 'INSTALL_FAILED'; then
+  ok "installed $pkg"
+elif printf '%s' "$out" | grep -qE 'INSTALL_FAILED_UPDATE_INCOMPATIBLE|INSTALL_FAILED_VERSION_DOWNGRADE|INSTALL_FAILED_PERMISSION_MODEL_DOWNGRADE|signatures do not match'; then
+  info "an incompatible build of $pkg is already installed (signature/version mismatch)"
+  if confirm "uninstall the existing $pkg and reinstall?"; then
+    info "uninstalling $pkg ..."
+    adb uninstall "$pkg" >/dev/null 2>&1 || true
+    if out="$(do_install)" && ! printf '%s' "$out" | grep -q 'INSTALL_FAILED'; then
+      ok "reinstalled $pkg (after uninstall)"
+    else
+      die "install still failed after uninstall:
+$out"
+    fi
+  else
+    die "aborted — existing $pkg left untouched (re-run with -y to auto-uninstall)"
+  fi
+else
+  die "install failed:
+$out"
+fi
+
+# ---- launch ----------------------------------------------------------------
+if [ "$launch" -eq 1 ]; then
+  if [ -n "$activity" ]; then
+    case "$activity" in
+      .*) comp="$pkg/$activity" ;;
+      *.*) comp="$pkg/$activity" ;;
+      *)  comp="$pkg/.$activity" ;;
+    esac
+    info "starting $comp ..."
+    adb shell am start -n "$comp" >/dev/null
+  else
+    info "no launcher activity in manifest — using monkey to start $pkg"
+    adb shell monkey -p "$pkg" -c android.intent.category.LAUNCHER 1 >/dev/null
+  fi
+  ok "launched $pkg on $serial"
+else
+  ok "done (install only)"
+fi
