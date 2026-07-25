@@ -2,7 +2,7 @@ class RunAndroid < Formula
   desc "Build, install and launch an Android Gradle project's APK on a device"
   homepage "https://github.com/jobtools/homebrew-tap"
   url "https://github.com/jobtools/homebrew-tap/archive/refs/tags/run-android-v1.0.0.tar.gz"
-  sha256 "REPLACE_WITH_SHA256"
+  sha256 "d6501b35df6bb0292378d9cf8cd49425f7ccb155fff549a6e0d0bf20cf18e4aa"
   license "MIT"
 
   def install
