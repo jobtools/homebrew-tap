@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# android-run — build, install and launch an Android (Gradle) project's debug
+# run-android — build, install and launch an Android (Gradle) project's debug
 # APK on a connected device/emulator. General-purpose: run it from anywhere
 # inside a Gradle project and it walks up to find `gradlew`, resolves the
 # application id + launcher activity straight from the built APK, and starts it.
 #
 # Usage:
-#   android-run [options]
+#   run-android [options]
 #
 # Options:
 #   -m, --module <name>   Gradle module to build/run (default: auto-detect, else "app")
