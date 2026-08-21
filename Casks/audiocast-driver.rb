@@ -1,6 +1,6 @@
 cask "audiocast-driver" do
-  version "1.1.11"
-  sha256 "94b31b7df2c2da88decba67a39c2cf43e174a131db15f2049afebf6057199193"
+  version "1.1.12"
+  sha256 "a7c2785af46c655e8f21397f1a80ef96f43eb658c43d48a5d20a4a8b0b3e6a47"
 
   url "https://github.com/jobtools/audiocast-driver/releases/download/v#{version}/AudioCast-#{version}.pkg"
   name "AudioCast Driver"
@@ -14,8 +14,6 @@ cask "audiocast-driver" do
   uninstall pkgutil: "com.audiocast.driver"
 
   caveats <<~CAVEATS
-    AudioCast Driver is self-signed (not Apple-notarized).
-
     After install, restart your Mac or run:
         sudo killall coreaudiod
 
