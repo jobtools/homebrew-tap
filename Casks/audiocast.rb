@@ -1,6 +1,6 @@
 cask "audiocast" do
-  version "1.1.69"
-  sha256 "fe90162008da365e1d225bcaa7c5044fae88982b34a32abf609e09e98c603eb2"
+  version "1.1.71"
+  sha256 "3ff88dfc76f449aa6b5364e2ea363029056e9a1d6fb55f01fd7d996dfba97120"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.zip"
   name "AudioCast"
@@ -13,24 +13,17 @@ cask "audiocast" do
 
   uninstall quit: "com.audiocast.sender"
 
-  postflight do
-    # Strip the quarantine attribute so Sequoia does not refuse first launch.
-    [
-      "#{staged_path}/AudioCast.app",
-      "#{appdir}/AudioCast.app",
-    ].each do |path|
-      system_command "/usr/bin/xattr",
-                     args: ["-dr", "com.apple.quarantine", path],
-                     must_succeed: false
-    end
-  end
-
   caveats <<~CAVEATS
-    AudioCast is self-signed (not Apple-notarized).
+    Upgrading from an older, self-signed build: this release is signed
+    with a new (Apple-notarized) certificate, so macOS no longer matches
+    it to the permissions you already granted. Microphone access is
+    re-requested automatically, and AudioCast clears the stale
+    Accessibility entry on first launch so it can ask for it again.
 
-    Quarantine is removed automatically on install. If macOS still refuses
-    to open the app, allow it via System Settings → Privacy & Security →
-    "Open Anyway" once.
+    If media keys or "pause on disconnect" still do nothing, reset the
+    entry by hand and reopen the app:
+
+        tccutil reset Accessibility com.audiocast.sender
 
     AudioCast streams audio through the AudioCast Driver (a virtual audio
     device). On first connect the app downloads and installs the driver
