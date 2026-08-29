@@ -1,6 +1,6 @@
 cask "audiocast" do
-  version "1.2.1"
-  sha256 "3d634b824982f9200a39d83d40a5fece73c309d9c4eeee7536052ab739f4fbf2"
+  version "1.2.3"
+  sha256 "4a2f1c483dd4140d5c7891f5e3f26ef336b5913ab33646d7f7a85bb9febdaa1a"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.zip"
   name "AudioCast"
