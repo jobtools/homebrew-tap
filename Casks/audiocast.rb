@@ -1,6 +1,6 @@
 cask "audiocast" do
-  version "1.2.4"
-  sha256 "960d3d2da6f7909ce54b0cfeb22bea87996077be351be3ae184da12d2dbda2e6"
+  version "1.2.5"
+  sha256 "05d121c34e2d0383103be621e4cddf8fbe1292c95830dd08870c8571df65e4c3"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.zip"
   name "AudioCast"
@@ -13,23 +13,48 @@ cask "audiocast" do
 
   uninstall quit: "com.audiocast.sender"
 
-  # Up to 1.2.3 the bundle was "AudioCast.app". An upgrade removes that one on
-  # its own (brew uninstalls the old artifact first), but a hand-installed copy
-  # from the direct download would linger next to the new name. Trash it — and
-  # only it: on an Apple Silicon Mac the same path can hold the iOS receiver
-  # installed from the App Store, which is exactly the collision this rename
-  # exists to end, so check the bundle id before deleting anything.
+  # Up to 1.2.3 the bundle was "AudioCast.app" — the same name the iPhone/iPad
+  # receiver takes when it is installed on an Apple Silicon Mac from the App
+  # Store, which is why it was renamed. Two leftovers from that era to clean up,
+  # and one accident to undo.
+  #
+  # The accident: upgrading from a pre-rename cask runs the OLD cask's uninstall
+  # first, and that copies whatever sits at "#{appdir}/AudioCast.app" into the
+  # Caskroom and deletes the original — even when what sat there was the App
+  # Store receiver, not us. Homebrew runs this preflight after that move and
+  # before it purges the backup (Cask::Upgrade: start_upgrade → install_artifacts
+  # → finalize_upgrade), so this is the one window where the receiver can be put
+  # back. Nothing else on the machine can: the old cask is already on disk.
   preflight do
-    legacy = "#{appdir}/AudioCast.app"
-    plist = "#{legacy}/Contents/Info.plist"
-    next unless File.exist?(plist)
+    legacy = Pathname("#{appdir}/AudioCast.app")
 
-    id = system_command("/usr/bin/defaults",
-                        args: ["read", "#{legacy}/Contents/Info", "CFBundleIdentifier"],
-                        must_succeed: false).stdout.strip
-    next unless id == "com.audiocast.sender"
+    # Ours only if it is a real macOS bundle carrying our sender's id. An App
+    # Store iOS app has no Contents/ at all (it is a Wrapper/ bundle), so it
+    # fails the first test and is never touched by mistake.
+    ours = lambda do |path|
+      plist = Pathname("#{path}/Contents/Info.plist")
+      next false unless plist.exist?
 
-    system_command "/bin/rm", args: ["-rf", legacy], sudo: false, must_succeed: false
+      system_command("/usr/bin/defaults",
+                     args:         ["read", "#{path}/Contents/Info", "CFBundleIdentifier"],
+                     must_succeed: false).stdout.strip == "com.audiocast.sender"
+    end
+
+    # A hand-installed sender under the old name (direct .zip download) would
+    # otherwise sit next to the new one, and the user would keep opening the
+    # stale one.
+    if legacy.exist? && ours.call(legacy)
+      system_command "/bin/rm", args: ["-rf", legacy], must_succeed: false
+    end
+
+    # Put a displaced App Store receiver back where it belongs.
+    Pathname.glob("#{staged_path.parent}/*/AudioCast.app").each do |backup|
+      next if ours.call(backup)
+      next if legacy.exist?
+
+      opoo "Restoring the App Store AudioCast receiver that the previous version moved aside."
+      system_command "/bin/mv", args: [backup, legacy], must_succeed: false
+    end
   end
 
   caveats <<~CAVEATS
