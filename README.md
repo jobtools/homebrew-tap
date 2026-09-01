@@ -9,6 +9,9 @@ brew tap jobtools/tap
 brew install --cask audiocast
 ```
 
+Homebrew 6.0+ asks you to trust a non-official tap before it will load a cask
+from it — `brew trust --tap jobtools/tap` once, then install as above.
+
 The `audiocast` cask depends on `audiocast-driver` and pulls it in
 automatically. Installing the driver standalone:
 
@@ -18,6 +21,8 @@ brew install --cask audiocast-driver
 
 ## Casks
 
+- **airplay-touch** — [AirPlay Touch](https://apps.sskplay.com/airplay-touch/)
+  macOS companion: makes a screen mirrored to the Android app touch-interactive.
 - **audiocast** — [AudioCast](https://github.com/jobtools/audiocast):
   stream macOS system audio to an Android phone over Wi-Fi.
 - **audiocast-driver** — virtual HAL audio device used by AudioCast
