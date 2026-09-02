@@ -1,8 +1,8 @@
 cask "audiocast" do
-  version "1.2.5"
-  sha256 "05d121c34e2d0383103be621e4cddf8fbe1292c95830dd08870c8571df65e4c3"
+  version "1.2.10"
+  sha256 "71a8679c369139c011034c463696d65e6771c4a5599798e4c28ff11a8a30bc5c"
 
-  url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.zip"
+  url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.dmg"
   name "AudioCast"
   desc "Stream macOS system audio to an Android phone over Wi-Fi"
   homepage "https://github.com/jobtools/homebrew-tap"
