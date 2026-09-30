@@ -30,9 +30,9 @@ brew install --cask audiocast-driver
 
 ## Formulae
 
-- **gitpark** — park idle projects: drop what can be regenerated (build
-  output, `node_modules`, …) and prove nothing is lost first. `gitpark scan`
-  reports reclaimable space, commits on no remote, stashes and secrets.
+- **gitpark** — park idle projects: delete build output, vault local-only
+  secrets, and remove the rest only after proving it can be restored (every
+  commit on a remote, a test clone). `gitpark scan`, `park`, `restore`.
 
 - **run-android** — build, install and launch any Android Gradle project's
   debug APK on a connected device/emulator.
