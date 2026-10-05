@@ -1,6 +1,6 @@
 cask "audiocast" do
-  version "1.2.10"
-  sha256 "71a8679c369139c011034c463696d65e6771c4a5599798e4c28ff11a8a30bc5c"
+  version "1.3.0"
+  sha256 "4847ed64f37d06e2336a7aebbf08edac948f6ac1f955a68ae696253f176c7d0d"
 
   url "https://github.com/jobtools/homebrew-tap/releases/download/audiocast-v#{version}/AudioCast-#{version}.dmg"
   name "AudioCast"
@@ -58,10 +58,12 @@ cask "audiocast" do
   end
 
   caveats <<~CAVEATS
-    AudioCast streams audio through the AudioCast Driver (a virtual audio
-    device). On first connect the app downloads and installs the driver
-    via the standard macOS admin prompt. After install, open the menu bar
-    icon and click "Connect" once a phone shows up.
+    On macOS 14.2 or later, AudioCast captures system audio directly.
+    Allow system audio recording when prompted. "Play source sound" is
+    off by default; enable it to also hear audio on this Mac.
+
+    On macOS 14.0 and 14.1, the AudioCast Driver is still required.
+    The app installs it on first connect via the standard macOS admin prompt.
   CAVEATS
 
   zap trash: [
